@@ -402,19 +402,23 @@ class Package {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(col)
 
         const insert_notes = db.prepare(`INSERT INTO notes (id, guid, mid, mod, usn, tags, flds, sfld, csum, flags, data) 
-        VALUES (null, ?, ?, ?, ?, ?, ?, ?, 0, 0, '')`)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, '')`)
 
         const insert_cards = db.prepare(`INSERT INTO cards (id, nid, did, ord, mod, usn, type, queue, due, ivl, factor, reps, lapses, left, odue, odid, flags, data) 
-        VALUES (null, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, 0, 0, 0, 0, 0, '')`)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, 0, 0, 0, 0, 0, '')`)
+
+        // Seed for note & card IDs based on current epoch ms
+        let nextId = now.getTime();
 
         for (const deck of this.decks) {
             for (const note of deck.notes) {
                 var tags = note.tags == null ? '' : note.tags.join(' ')
                 insert_notes.run(
                     [
+                        nextId++,
                         note.guid,                  // guid
                         note.model.props.id,        // mid
-                        (+now / 1000) | 0,          // mod
+                        Math.floor(nextId / 1000),  // mod time based on id
                         -1,                         // usn
                         tags,                       // tags
                         note.fields.join('\x1f'),   // flds
@@ -425,12 +429,14 @@ class Package {
                 var note_id = rowID[0]['values'][0][0];
 
                 for (const card_ord of note.cards) {
+                    const cardId = nextId++;
                     insert_cards.run(
                         [
+                            cardId,            // explicit card id encodes creation time
                             note_id,            // nid
                             deck.id,            // did
                             card_ord,           // ord
-                            (+now / 1000) | 0,  // mod
+                            Math.floor(cardId/1000),  // mod time based on id
                             -1,                 // usn
                             0,                  // type 0=new, 1=learning, 2=due 
                             0,                  // queue -1 for suspended

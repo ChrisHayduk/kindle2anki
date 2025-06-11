@@ -211,10 +211,11 @@
     function createAnkiDeck(deckName, cards) {
         setStatus('Building Anki deck…');
 
-        // Create a very simple Basic model
+        // Create a very simple Basic model with unique ID
+        const modelId = Date.now();
         const basicModel = new Model({
             name: 'Basic',
-            id: Date.now(),
+            id: modelId,
             flds: [{ name: 'Front' }, { name: 'Back' }],
             req: [[0, 'all', [0]]],
             tmpls: [
@@ -226,12 +227,29 @@
             ]
         });
 
-        const deck = new Deck(Date.now(), deckName);
+        // Create deck with unique ID and current timestamp
+        const deckId = modelId + 1; // Ensure deck ID is different from model ID
+        const deck = new Deck(deckId, deckName);
 
-        for (const { word, context, definition } of cards) {
+        // Get current timestamp for card creation
+        const baseTimestamp = Math.floor(Date.now() / 1000); // Anki uses seconds since epoch
+
+        for (let i = 0; i < cards.length; i++) {
+            const { word, context, definition } = cards[i];
             const front = `${word}<br><br>${context || ''}`;
             const back = definition || '&nbsp;';
-            deck.addNote(basicModel.note([front, back]));
+            
+            // Create note with unique timestamp (add index to ensure uniqueness)
+            const note = basicModel.note([front, back]);
+            
+            // Set creation timestamp and other fields for proper Anki import
+            const createdTimestamp = baseTimestamp + i; // Each card gets a unique timestamp
+            note.mod = createdTimestamp; // Modification time (when card was created)
+            note.id = Date.now() + i; // Unique note ID
+            note.usn = -1; // Update sequence number (-1 for new cards)
+            note.tags = []; // Empty tags array
+            
+            deck.addNote(note);
         }
 
         const pkg = new Package();
