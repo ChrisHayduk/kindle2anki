@@ -130,7 +130,7 @@
                 <div class="mb-3">
                     <label for="deck-name" class="form-label fw-semibold">Deck name</label>
                     <input type="text" class="form-control" id="deck-name" value="Kindle Vocabulary">
-                    <div class="form-text">Tip: to <strong>merge</strong> new cards into an existing deck in Anki, use <em>exactly the same deck name</em> you used last time (including capitalisation). Anki will combine the cards and skip duplicates automatically.</div>
+                    <div class="form-text">Tip: to <strong>merge</strong> new cards into an existing deck in Anki, use <em>exactly the same deck name</em> as your existing deck in Anki (including capitalization). Anki will combine the cards and skip duplicates automatically.</div>
                 </div>
             </div>
         </div>
@@ -167,10 +167,24 @@
                 </button>
 
                 <div id="feedback" class="mt-4">
-                    <div id="status" class="alert alert-info py-2" role="alert"></div>
+                    <div id="status" class="alert alert-info py-2" role="alert" style="display:none;"></div>
                     <a id="download-link" class="btn btn-success mt-3" style="display:none;">
                         <i class="fa-solid fa-download me-1"></i>Download deck
                     </a>
+                </div>
+
+                <div class="mt-4 p-3 bg-light rounded">
+                    <h6 class="fw-semibold mb-2"><i class="fa-solid fa-info-circle me-2"></i>After generating your deck, import it into Anki</h6>
+                    <ol class="mb-0 small">
+                        <li>First, click the <strong>"Generate Anki Deck"</strong> button above and download your <code>.apkg</code> file</li>
+                        <li>Open the Anki desktop app on your computer</li>
+                        <li>Click <strong>File</strong> → <strong>Import</strong> (or double-click the downloaded <code>.apkg</code> file)</li>
+                        <li>Select your downloaded deck file and click <strong>Open</strong></li>
+                        <li>Click <strong>Import</strong> to add the cards to your collection</li>
+                    </ol>
+                    <p class="small text-muted mb-0 mt-2">
+                        <strong>Tip:</strong> If you're updating an existing deck, use the same deck name to merge new cards automatically.
+                    </p>
                 </div>
             </div>
         </div>

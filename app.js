@@ -35,6 +35,7 @@
     function setStatus(msg, variant = 'info') {
         statusEl.textContent = msg;
         statusEl.className = `alert alert-${variant} py-2`;
+        statusEl.style.display = 'block';
     }
 
     // Utility to deduplicate by "word" key – keep first occurrence
