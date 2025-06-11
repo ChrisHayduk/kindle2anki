@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kindle to Anki – Online Converter</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Custom overrides -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Core libraries (loaded early for faster startup) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <!-- Local vendor bundles (genanki & deps) -->
+    <script src="sql/sql.js"></script>
+    <script src="filesaver/FileSaver.min.js"></script>
+    <script src="anki/genanki.js"></script>
+
+    <!-- SEO metadata -->
+    <meta name="description" content="Convert Kindle Vocabulary Builder and Clippings into Anki flashcards instantly — 100% private, right in your browser.">
+    <meta name="keywords" content="anki for kindle, anki kindle, anki kindle paperwhite, anki on kindle, kindle anki, kindle to anki, kindle vocabulary builder to anki, anki kindle fire, anki overdrive app kindle, anki app for kids kindle, kindle flashcards, flashcards in kindle, flashcards on kindle, what are kindle flashcards, flashcards kindle, how to create flashcards in kindle, how to make flashcards in kindle app, how to make flashcards on kindle, how to use flashcards in kindle, how to use kindle flashcards">
+    <link rel="canonical" href="https://kindle2anki.app/">
+    <!-- Open Graph / social -->
+    <meta property="og:title" content="Kindle to Anki – Online Converter">
+    <meta property="og:description" content="Create Anki flashcards from your Kindle vocabulary in seconds. Fast, private, and free.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kindle2anki.app/">
+    <meta property="og:image" content="https://kindle2anki.app/og-banner.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Kindle to Anki – Online Converter">
+    <meta name="twitter:description" content="Create Anki flashcards from your Kindle vocabulary in seconds. Fast, private, and free.">
+    <meta name="twitter:image" content="https://kindle2anki.app/og-banner.png">
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="fa-solid fa-book-open-reader me-2"></i>
+                Kindle&nbsp;<span class="opacity-75">→</span>&nbsp;Anki
+            </a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">Create Anki flashcards from Kindle words in seconds</h1>
+            <p class="lead mb-4">Boost your retention and master new vocabulary with our privacy-first, browser-based converter.</p>
+            <a href="#convert-section" class="btn btn-primary btn-lg fw-semibold">
+                <i class="fa-solid fa-arrow-down-long me-2"></i>Get Started
+            </a>
+        </div>
+    </section>
+
+    <!-- Key benefits -->
+    <section class="py-5 bg-white">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4 text-center">
+                    <i class="fa-solid fa-shield-halved fa-3x text-light mb-3" style="color:#2c3e50 !important"></i>
+                    <h3 class="h6 fw-bold">Privacy-first</h3>
+                    <p class="text-muted small">All processing happens locally. Your Kindle files never leave your device.</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <i class="fa-solid fa-bolt fa-3x text-light mb-3" style="color:#2c3e50 !important"></i>
+                    <h3 class="h6 fw-bold">Lightning-fast</h3>
+                    <p class="text-muted small">Generate a fully-formatted Anki deck in under a minute—no signup required.</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <i class="fa-solid fa-language fa-3x text-light mb-3" style="color:#2c3e50 !important"></i>
+                    <h3 class="h6 fw-bold">Automatic definitions</h3>
+                    <p class="text-muted small">Each card includes a concise dictionary definition, saving you time.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main content -->
+    <main id="convert-section" class="container my-5 flex-grow-1">
+        <!-- Hero content moved above; placeholder for spacing -->
+
+        <!-- Step 1: Upload files -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h2 class="h5 mb-0"><span class="badge bg-secondary me-2">1</span>Upload your Kindle files</h2>
+            </div>
+            <div class="card-body">
+                <p class="alert alert-secondary small" role="note">
+                    <strong>First time here?</strong> Plug your Kindle into your computer with a USB&nbsp;cable. It will show up as a removable drive named "Kindle".<br>
+                    • The vocabulary database is at <code>system/Vocabulary/vocab.db</code>.<br>
+                    • Optional highlights are in <code>documents/My Clippings.txt</code>.<br>
+                    Copy (or select) those two files below and you're ready to convert.
+                </p>
+                <div class="mb-3">
+                    <label for="vocab-db" class="form-label fw-semibold">Vocabulary Builder database (<code>vocab.db</code>)</label>
+                    <input class="form-control" type="file" id="vocab-db" accept=".db">
+                    <div class="form-text">Path on Kindle: <code>system/Vocabulary/vocab.db</code></div>
+                </div>
+                <div class="mb-3">
+                    <label for="clippings-file" class="form-label fw-semibold">My Clippings (<code>My Clippings.txt</code>) <span class="text-muted">(optional)</span></label>
+                    <input class="form-control" type="file" id="clippings-file" accept=".txt">
+                    <div class="form-text">Path on Kindle: <code>documents/My Clippings.txt</code></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Deck settings -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h2 class="h5 mb-0"><span class="badge bg-secondary me-2">2</span>Deck settings</h2>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="deck-name" class="form-label fw-semibold">Deck name</label>
+                    <input type="text" class="form-control" id="deck-name" value="Kindle Vocabulary">
+                    <div class="form-text">Tip: to <strong>merge</strong> new cards into an existing deck in Anki, use <em>exactly the same deck name</em> you used last time (including capitalisation). Anki will combine the cards and skip duplicates automatically.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Filters -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h2 class="h5 mb-0"><span class="badge bg-secondary me-2">3</span>Filters (optional)</h2>
+            </div>
+            <div class="card-body row g-3">
+                <div class="col-md-4">
+                    <label for="start-date" class="form-label fw-semibold">Start date</label>
+                    <input type="date" class="form-control" id="start-date">
+                </div>
+                <div class="col-md-4">
+                    <label for="end-date" class="form-label fw-semibold">End date</label>
+                    <input type="date" class="form-control" id="end-date">
+                </div>
+                <div class="col-md-4">
+                    <label for="book-filter" class="form-label fw-semibold">Book title contains</label>
+                    <input type="text" class="form-control" id="book-filter" placeholder="e.g. War and Peace">
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Generate deck -->
+        <div class="card shadow-sm mb-5">
+            <div class="card-header bg-white">
+                <h2 class="h5 mb-0"><span class="badge bg-secondary me-2">4</span>Generate deck</h2>
+            </div>
+            <div class="card-body">
+                <button id="generate-btn" class="btn btn-primary btn-lg">
+                    <i class="fa-solid fa-magic me-2"></i>Generate Anki Deck
+                </button>
+
+                <div id="feedback" class="mt-4">
+                    <div id="status" class="alert alert-info py-2" role="alert"></div>
+                    <a id="download-link" class="btn btn-success mt-3" style="display:none;">
+                        <i class="fa-solid fa-download me-1"></i>Download deck
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FAQ & Guide Section (SEO-rich) -->
+    <section id="faq" class="py-5 bg-white">
+        <div class="container">
+            <h2 class="h4 fw-bold text-center mb-4">Kindle to Anki – Frequently Asked Questions</h2>
+
+            <div class="accordion" id="faqAccordion">
+                <!-- Q1: What are Kindle flashcards? -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading1">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="false" aria-controls="collapse1">
+                            What are Kindle flashcards?
+                        </button>
+                    </h2>
+                    <div id="collapse1" class="accordion-collapse collapse" aria-labelledby="heading1" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            <p>Wondering <strong>what are Kindle flashcards</strong>? They're Amazon's built-in study cards that appear after you highlight a word or definition while reading. Our service transforms those <em>Kindle flashcards</em> into Anki decks, giving you the closest thing to a seamless <strong>anki for kindle</strong> or <strong>anki kindle</strong> experience. Whether you like <em>flashcards on Kindle</em> or prefer to study elsewhere, the conversion is instant.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Q2: Creating / Making flashcards in Kindle -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading2">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
+                            How to create flashcards in Kindle or make flashcards in the Kindle app?
+                        </button>
+                    </h2>
+                    <div id="collapse2" class="accordion-collapse collapse" aria-labelledby="heading2" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            <p>If you've ever searched for <strong>how to create flashcards in Kindle</strong>, <strong>how to make flashcards in Kindle app</strong>, or <strong>how to make flashcards on Kindle</strong>, the answer is simple: highlight words while you read. Kindle's Vocabulary Builder stores them in <code>vocab.db</code>. Our tool then performs the one-click <strong>kindle to anki</strong> conversion so your study material is ready in seconds.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Q3: Using Kindle flashcards -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading3">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3" aria-expanded="false" aria-controls="collapse3">
+                            How to use Kindle flashcards in Anki?
+                        </button>
+                    </h2>
+                    <div id="collapse3" class="accordion-collapse collapse" aria-labelledby="heading3" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            <p>Once your highlights have been exported, simply import the generated <code>.apkg</code> into Anki. This covers both <strong>how to use flashcards in Kindle</strong> and <strong>how to use Kindle flashcards</strong> when you're away from your e-reader.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Q4: Anki on Kindle devices -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading4">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4" aria-expanded="false" aria-controls="collapse4">
+                            Can I run Anki on Kindle Paperwhite or Kindle Fire?
+                        </button>
+                    </h2>
+                    <div id="collapse4" class="accordion-collapse collapse" aria-labelledby="heading4" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            <p>While native apps aren't available, you can still enjoy an <strong>anki kindle paperwhite</strong> or <strong>anki kindle fire</strong> workflow by creating cards here and reviewing them on your phone, tablet, or desktop. Think of it as having <strong>anki on kindle</strong>—all the benefits without the hassle.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Q5: Vocabulary Builder export -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading5">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse5" aria-expanded="false" aria-controls="collapse5">
+                            How do I export Kindle Vocabulary Builder to Anki?
+                        </button>
+                    </h2>
+                    <div id="collapse5" class="accordion-collapse collapse" aria-labelledby="heading5" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            <p>Drag your <code>system/Vocabulary/vocab.db</code> file into the converter and we instantly handle the <strong>kindle vocabulary builder to anki</strong> migration—no spreadsheets or manual typing needed.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Q6: OverDrive & kids -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading6">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse6" aria-expanded="false" aria-controls="collapse6">
+                            Is there an Anki OverDrive app for Kindle or an Anki app for kids on Kindle?
+                        </button>
+                    </h2>
+                    <div id="collapse6" class="accordion-collapse collapse" aria-labelledby="heading6" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            <p>There's no official <strong>anki overdrive app kindle</strong> yet, nor a dedicated <strong>anki app for kids kindle</strong>. However, by exporting your vocabulary with this tool, you can sync decks to any device, letting kids study safely and allowing OverDrive readers to keep their learning in one ecosystem.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-white border-top py-4 mt-auto">
+        <div class="container small text-muted text-center">
+            <p class="mb-1">All processing is done locally in your browser. No files ever leave your device.</p>
+            <p class="mb-0">Kindle and Amazon are trademarks of Amazon.com, Inc. This project is not affiliated with Amazon.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Bundle (with Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html> 

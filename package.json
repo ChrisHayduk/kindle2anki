@@ -1,0 +1,12 @@
+{
+  "name": "kindle2anki-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Development tooling for Kindle2Anki static web UI (auto-reload while coding)",
+  "scripts": {
+    "dev": "live-server --port=3000 --watch=web --open=index.html"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+} 
