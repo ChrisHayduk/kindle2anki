@@ -151,17 +151,53 @@
                 <h2 class="h5 mb-0"><span class="badge bg-secondary me-2">3</span>Filters (optional)</h2>
             </div>
             <div class="card-body row g-3">
-                <div class="col-md-4">
-                    <label for="start-date" class="form-label fw-semibold">Start date</label>
+                <div class="col-md-3">
+                    <label for="start-date" class="form-label fw-semibold">
+                        <i class="fa-solid fa-calendar-days me-1"></i>Start date
+                    </label>
                     <input type="date" class="form-control" id="start-date">
+                    <div class="form-text">
+                        <i class="fa-solid fa-filter me-1"></i>
+                        Also filters books & languages
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label for="end-date" class="form-label fw-semibold">End date</label>
+                <div class="col-md-3">
+                    <label for="end-date" class="form-label fw-semibold">
+                        <i class="fa-solid fa-calendar-days me-1"></i>End date
+                    </label>
                     <input type="date" class="form-control" id="end-date">
+                    <div class="form-text">
+                        <i class="fa-solid fa-filter me-1"></i>
+                        Also filters books & languages
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label for="book-filter" class="form-label fw-semibold">Book title contains</label>
-                    <input type="text" class="form-control" id="book-filter" placeholder="e.g. War and Peace">
+                <div class="col-md-3">
+                    <label for="book-filter" class="form-label fw-semibold">
+                        <i class="fa-solid fa-book me-1"></i>Books
+                    </label>
+                    <div class="custom-multiselect">
+                        <select class="form-select custom-multiselect-input" id="book-filter" multiple size="5" disabled>
+                            <option value="" disabled>Upload files to see books</option>
+                        </select>
+                    </div>
+                    <div class="form-text">
+                        <i class="fa-solid fa-info-circle me-1"></i>
+                        All selected by default. Click to toggle selection.
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label for="language-filter" class="form-label fw-semibold">
+                        <i class="fa-solid fa-language me-1"></i>Languages
+                    </label>
+                    <div class="custom-multiselect">
+                        <select class="form-select custom-multiselect-input" id="language-filter" multiple size="5" disabled>
+                            <option value="" disabled>Upload files to see languages</option>
+                        </select>
+                    </div>
+                    <div class="form-text">
+                        <i class="fa-solid fa-info-circle me-1"></i>
+                        All selected by default. Click to toggle selection.
+                    </div>
                 </div>
             </div>
         </div>

@@ -19,6 +19,7 @@
     const startDateInput = document.getElementById('start-date');
     const endDateInput = document.getElementById('end-date');
     const bookFilterInput = document.getElementById('book-filter');
+    const languageFilterInput = document.getElementById('language-filter');
 
     // Load sql.js (returns a promise that resolves with the SQL object)
     const SQL_Promise = window.initSqlJs ? window.initSqlJs({
@@ -147,12 +148,21 @@
         const res = db.exec(query);
         if (res.length === 0) return [];
         const rows = res[0].values;
-        return rows.map(([word, context, ts, book]) => ({
+        
+        const entries = rows.map(([word, context, ts, book]) => ({
             word,
             context: context || '',
             timestamp: Number(ts) || null, // ms epoch or null
             book: book || ''
         }));
+
+        // Add language detection to each entry
+        setStatus('Detecting languages…');
+        for (const entry of entries) {
+            entry.language = await detectLanguage(entry.word, entry.context);
+        }
+
+        return entries;
     }
 
     // Parse My Clippings.txt into array of { word, context }
@@ -187,6 +197,13 @@
             }
             entries.push({ word, context, timestamp: ts, book });
         }
+
+        // Add language detection to each entry
+        setStatus('Detecting languages for clippings…');
+        for (const entry of entries) {
+            entry.language = await detectLanguage(entry.word, entry.context);
+        }
+
         return entries;
     }
 
@@ -241,44 +258,27 @@
         setStatus('Starting…', 'info');
 
         const deckName = deckNameInput.value.trim() || 'Kindle Vocabulary';
-        const vocabFile = vocabInput.files[0] || null;
-        const clippingsFile = clippingsInput.files[0] || null;
 
-        if (!vocabFile && !clippingsFile) {
-            setStatus('Please select at least one Kindle data file.', 'warning');
+        if (globalEntries.length === 0) {
+            setStatus('Please select at least one Kindle data file and wait for analysis to complete.', 'warning');
             return;
         }
 
         try {
-            // Extract entries from selected sources
-            const [vocabEntries, clippingEntries] = await Promise.all([
-                parseVocabDb(vocabFile),
-                parseClippings(clippingsFile)
-            ]);
+            // Apply filters to the globally stored entries
+            let filteredEntries = applyFilters(globalEntries);
 
-            let allEntries = [...vocabEntries, ...clippingEntries];
-            if (allEntries.length === 0) {
-                setStatus('No entries found in your files.');
+            if (filteredEntries.length === 0) {
+                setStatus('No entries remain after applying filters.', 'warning');
                 return;
             }
 
-            // Deduplicate
-            allEntries = deduplicate(allEntries);
+            setStatus(`Preparing ${filteredEntries.length} cards…`);
 
-            // Apply filters
-            allEntries = applyFilters(allEntries);
-
-            if (allEntries.length === 0) {
-                setStatus('No entries remain after applying filters.');
-                return;
-            }
-
-            setStatus(`Preparing ${allEntries.length} cards…`);
-
-            // NEW: fetch definitions for all words in parallel (with caching)
+            // Fetch definitions for all words in parallel (with caching)
             setStatus('Fetching definitions…');
             const cardsWithDefs = await Promise.all(
-                allEntries.map(async (entry) => ({
+                filteredEntries.map(async (entry) => ({
                     ...entry,
                     definition: await fetchDefinition(entry.word, entry.context)
                 }))
@@ -300,9 +300,10 @@
     function applyFilters(entries) {
         const start = startDateInput.value ? Date.parse(startDateInput.value) : null; // midnight local
         const end = endDateInput.value ? Date.parse(endDateInput.value) + 24*60*60*1000 - 1 : null; // end of day
-        const bookSubstr = bookFilterInput.value.trim().toLowerCase();
+        const selectedBooks = Array.from(bookFilterInput.selectedOptions).map(opt => opt.value);
+        const selectedLanguages = Array.from(languageFilterInput.selectedOptions).map(opt => opt.value);
 
-        return entries.filter(({ timestamp, book }) => {
+        return entries.filter(({ timestamp, book, language }) => {
             // Date filter
             if (start !== null) {
                 if (timestamp === null || timestamp < start) return false;
@@ -310,11 +311,293 @@
             if (end !== null) {
                 if (timestamp === null || timestamp > end) return false;
             }
-            // Book filter (substring, case-insensitive)
-            if (bookSubstr) {
-                if (!book.toLowerCase().includes(bookSubstr)) return false;
+            // Book filter (exact match from selection)
+            // Only apply if there are books in the dropdown (not disabled)
+            if (selectedBooks.length > 0 && !bookFilterInput.disabled) {
+                if (!selectedBooks.includes(book)) return false;
+            }
+            // Language filter (exact match from selection)
+            // Only apply if there are languages in the dropdown (not disabled)
+            if (selectedLanguages.length > 0 && !languageFilterInput.disabled) {
+                if (!selectedLanguages.includes(language)) return false;
             }
             return true;
         });
     }
+
+    // Extract unique books from entries
+    function getUniqueBooks(entries) {
+        const books = new Set();
+        entries.forEach(entry => {
+            if (entry.book && entry.book.trim()) {
+                books.add(entry.book.trim());
+            }
+        });
+        return Array.from(books).sort();
+    }
+
+    // Extract unique languages from entries
+    function getUniqueLanguages(entries) {
+        const languages = new Set();
+        entries.forEach(entry => {
+            if (entry.language) {
+                languages.add(entry.language);
+            }
+        });
+        return Array.from(languages).sort();
+    }
+
+    // Get language display name from code
+    function getLanguageDisplayName(langCode) {
+        const langNames = {
+            'en': 'English',
+            'es': 'Spanish',
+            'fr': 'French',
+            'de': 'German',
+            'it': 'Italian',
+            'ru': 'Russian',
+            'pt-BR': 'Portuguese (Brazil)',
+            'ja': 'Japanese',
+            'ko': 'Korean',
+            'tr': 'Turkish',
+            'ar': 'Arabic',
+            'hi': 'Hindi',
+            'id': 'Indonesian',
+            'sv': 'Swedish',
+            'fi': 'Finnish',
+            'pl': 'Polish',
+            'nl': 'Dutch',
+            'no': 'Norwegian',
+            'da': 'Danish',
+            'cs': 'Czech',
+            'ro': 'Romanian',
+            'el': 'Greek',
+            'zh': 'Chinese',
+            'he': 'Hebrew',
+            'hu': 'Hungarian'
+        };
+        return langNames[langCode] || langCode.toUpperCase();
+    }
+
+    // Populate the book filter dropdown
+    function populateBookFilter(books) {
+        // Remember currently selected books
+        const previouslySelected = Array.from(bookFilterInput.selectedOptions).map(opt => opt.value);
+        
+        bookFilterInput.innerHTML = '';
+        bookFilterInput.disabled = false;
+        
+        if (books.length === 0) {
+            bookFilterInput.innerHTML = '<option value="" disabled>No books found</option>';
+            bookFilterInput.disabled = true;
+            return;
+        }
+
+        books.forEach(book => {
+            const option = document.createElement('option');
+            option.value = book;
+            option.textContent = book;
+            // If this is the first population or the book was previously selected, select it
+            option.selected = previouslySelected.length === 0 || previouslySelected.includes(book);
+            bookFilterInput.appendChild(option);
+        });
+
+        // Multi-select behavior is already set up globally
+    }
+
+    // Populate the language filter dropdown
+    function populateLanguageFilter(languages) {
+        // Remember currently selected languages
+        const previouslySelected = Array.from(languageFilterInput.selectedOptions).map(opt => opt.value);
+        
+        languageFilterInput.innerHTML = '';
+        languageFilterInput.disabled = false;
+        
+        if (languages.length === 0) {
+            languageFilterInput.innerHTML = '<option value="" disabled>No languages detected</option>';
+            languageFilterInput.disabled = true;
+            return;
+        }
+
+        languages.forEach(langCode => {
+            const option = document.createElement('option');
+            option.value = langCode;
+            option.textContent = getLanguageDisplayName(langCode);
+            // If this is the first population or the language was previously selected, select it
+            option.selected = previouslySelected.length === 0 || previouslySelected.includes(langCode);
+            languageFilterInput.appendChild(option);
+        });
+
+        // Multi-select behavior is already set up globally
+    }
+
+    // Store parsed entries globally for filter updates
+    let globalEntries = [];
+
+    // Filter entries by date range
+    function filterEntriesByDateRange(entries) {
+        const start = startDateInput.value ? Date.parse(startDateInput.value) : null;
+        const end = endDateInput.value ? Date.parse(endDateInput.value) + 24*60*60*1000 - 1 : null;
+
+        if (!start && !end) {
+            return entries; // No date filter applied
+        }
+
+        return entries.filter(({ timestamp }) => {
+            if (timestamp === null) {
+                return false; // Exclude entries without timestamps when date filter is active
+            }
+            
+            if (start !== null && timestamp < start) {
+                return false;
+            }
+            
+            if (end !== null && timestamp > end) {
+                return false;
+            }
+            
+            return true;
+        });
+    }
+
+    // Update book and language filter lists based on current date range
+    function updateFilterLists() {
+        if (globalEntries.length === 0) {
+            return; // No data to filter
+        }
+
+        // Get entries within the current date range
+        const filteredEntries = filterEntriesByDateRange(globalEntries);
+        
+        // Extract unique books and languages from filtered entries
+        const books = getUniqueBooks(filteredEntries);
+        const languages = getUniqueLanguages(filteredEntries);
+        
+        // Update the dropdowns with filtered data
+        populateBookFilter(books);
+        populateLanguageFilter(languages);
+
+        // Update status to show filtered counts
+        const dateRangeText = getDateRangeText();
+        if (dateRangeText) {
+            setStatus(`Filtered to ${filteredEntries.length} entries from ${books.length} books in ${languages.length} languages (${dateRangeText})`, 'info');
+        } else {
+            setStatus(`Found ${filteredEntries.length} entries from ${books.length} books in ${languages.length} languages`, 'success');
+        }
+    }
+
+    // Helper function to get readable date range text
+    function getDateRangeText() {
+        const start = startDateInput.value;
+        const end = endDateInput.value;
+        
+        if (start && end) {
+            return `${start} to ${end}`;
+        } else if (start) {
+            return `from ${start}`;
+        } else if (end) {
+            return `until ${end}`;
+        }
+        
+        return '';
+    }
+
+    // Update filters when files are uploaded
+    async function updateFiltersFromFiles() {
+        const vocabFile = vocabInput.files[0] || null;
+        const clippingsFile = clippingsInput.files[0] || null;
+
+        if (!vocabFile && !clippingsFile) {
+            // Reset filters to disabled state
+            populateBookFilter([]);
+            populateLanguageFilter([]);
+            globalEntries = [];
+            return;
+        }
+
+        try {
+            setStatus('Analyzing uploaded files…', 'info');
+            
+            // Extract entries from selected sources
+            const [vocabEntries, clippingEntries] = await Promise.all([
+                parseVocabDb(vocabFile),
+                parseClippings(clippingsFile)
+            ]);
+
+            globalEntries = [...vocabEntries, ...clippingEntries];
+            globalEntries = deduplicate(globalEntries);
+
+            // Update filter lists (this will apply any existing date filters)
+            updateFilterLists();
+        } catch (err) {
+            console.error(err);
+            setStatus('Error analyzing files: ' + err.message, 'danger');
+            populateBookFilter([]);
+            populateLanguageFilter([]);
+            globalEntries = [];
+        }
+    }
+
+    // Add event listeners for file uploads
+    vocabInput.addEventListener('change', updateFiltersFromFiles);
+    clippingsInput.addEventListener('change', updateFiltersFromFiles);
+
+    // Add event listeners for date changes to update book/language lists
+    startDateInput.addEventListener('change', updateFilterLists);
+    endDateInput.addEventListener('change', updateFilterLists);
+
+    // Add a clear dates function for better UX
+    function clearDateFilters() {
+        startDateInput.value = '';
+        endDateInput.value = '';
+        updateFilterLists();
+    }
+
+    // Expose clear function globally for potential use
+    window.clearDateFilters = clearDateFilters;
+
+    // Fix multi-select behavior for both dropdowns
+    function setupMultiSelectBehavior(selectElement) {
+        // Avoid duplicate listeners
+        if (selectElement.hasAttribute('data-multiselect-setup')) {
+            return;
+        }
+        selectElement.setAttribute('data-multiselect-setup', 'true');
+
+        selectElement.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            
+            const option = e.target;
+            if (option.tagName === 'OPTION') {
+                // Toggle the selected state of the clicked option
+                option.selected = !option.selected;
+                
+                // Trigger change event to update any listeners
+                const changeEvent = new Event('change', { bubbles: true });
+                selectElement.dispatchEvent(changeEvent);
+            }
+        });
+
+        // Prevent the default click behavior that would deselect other options
+        selectElement.addEventListener('click', function(e) {
+            e.preventDefault();
+        });
+
+        // Handle keyboard navigation properly
+        selectElement.addEventListener('keydown', function(e) {
+            if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault();
+                const focusedOption = selectElement.options[selectElement.selectedIndex];
+                if (focusedOption) {
+                    focusedOption.selected = !focusedOption.selected;
+                    const changeEvent = new Event('change', { bubbles: true });
+                    selectElement.dispatchEvent(changeEvent);
+                }
+            }
+        });
+    }
+
+    // Apply the multi-select behavior to both filter dropdowns
+    setupMultiSelectBehavior(bookFilterInput);
+    setupMultiSelectBehavior(languageFilterInput);
 })(); 

@@ -122,3 +122,179 @@ button:hover, .button:hover {
     background-color: #e4e7ea;
     color: #2c3e50;
 }
+
+/* Custom Multi-select styling */
+.custom-multiselect {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    background: linear-gradient(145deg, #ffffff, #f8f9fa);
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.custom-multiselect:hover {
+    border-color: #3498db;
+    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.15);
+    transform: translateY(-1px);
+}
+
+.custom-multiselect:focus-within {
+    border-color: #2c3e50;
+    box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
+    transform: translateY(-1px);
+}
+
+.custom-multiselect-input {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    outline: none;
+    width: 100%;
+    min-height: 140px;
+    scrollbar-width: thin;
+    scrollbar-color: #3498db #f1f1f1;
+}
+
+/* Webkit scrollbar styling for multiselect */
+.custom-multiselect-input::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-multiselect-input::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.custom-multiselect-input::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, #3498db, #2c3e50);
+    border-radius: 3px;
+}
+
+.custom-multiselect-input::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(45deg, #2980b9, #34495e);
+}
+
+.custom-multiselect-input option {
+    padding: 8px 12px;
+    margin: 2px 0;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    background-color: #ffffff;
+    color: #2c3e50;
+    border: none;
+}
+
+.custom-multiselect-input option:hover {
+    background: linear-gradient(135deg, #ecf0f1, #d5dbdb);
+    color: #2c3e50;
+    cursor: pointer;
+    transform: scale(1.02);
+}
+
+.custom-multiselect-input option:hover:not(:checked):after {
+    content: " ✓";
+    color: #27ae60;
+    font-weight: bold;
+}
+
+.custom-multiselect-input option:hover:checked:after {
+    content: " ✗";
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+.custom-multiselect-input option:checked {
+    background: linear-gradient(135deg, #3498db, #2c3e50) !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.custom-multiselect-input option:checked:before {
+    content: "✓ ";
+    color: #ffffff;
+    font-weight: bold;
+    margin-right: 4px;
+}
+
+.custom-multiselect-input option:checked:hover {
+    background: linear-gradient(135deg, #2980b9, #34495e) !important;
+}
+
+.custom-multiselect-input:disabled {
+    background-color: #f8f9fa !important;
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.custom-multiselect:has(.custom-multiselect-input:disabled) {
+    border-color: #dee2e6;
+    box-shadow: none;
+    transform: none;
+}
+
+.custom-multiselect:has(.custom-multiselect-input:disabled):hover {
+    border-color: #dee2e6;
+    box-shadow: none;
+    transform: none;
+}
+
+/* Enhanced form text styling */
+.form-text {
+    color: #6c757d;
+    font-size: 0.82rem;
+    margin-top: 0.35rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 500;
+}
+
+.form-text i {
+    color: #3498db;
+    font-size: 0.9rem;
+}
+
+/* Label enhancements */
+.form-label.fw-semibold {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.form-label.fw-semibold i {
+    color: #3498db;
+    font-size: 1rem;
+}
+
+/* Animation for options */
+@keyframes optionSelect {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+.custom-multiselect-input option:checked {
+    animation: optionSelect 0.2s ease-out;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .custom-multiselect-input {
+        font-size: 0.85rem;
+        min-height: 120px;
+    }
+    
+    .form-text {
+        font-size: 0.78rem;
+    }
+}
